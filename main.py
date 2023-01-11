@@ -12,7 +12,7 @@ from libs.baseclass import navigation_layout, homescreen, about, help
 
 # this class serves as the main class that runs the system
 class MyApp(MDApp):
-    title="Plant Disease Detection"
+    title="Plant Monitoring System"
 
     current_index = NumericProperty()
 
@@ -24,7 +24,7 @@ class MyApp(MDApp):
 
     def build(self):
 
-        #self.icon = 'qr_attendance.ico'
+        #self.icon = 'plant_monitoring_system.ico'
         self.theme_cls.primary_palette = "LightGreen"
         screen = Builder.load_file("main.kv")
         return screen
