@@ -7,4 +7,5 @@ Builder.load_file('./libs/kv/navigation_layout.kv')
 
 class NavLayoutScreen(Screen):
  
-    pass
+    def plant_capture_timer(self):
+        print('timer')
