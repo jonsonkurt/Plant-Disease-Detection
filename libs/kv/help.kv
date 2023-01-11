@@ -1,0 +1,29 @@
+<HelpScreen>
+	FloatLayout:
+		pos_hint: {'center_y': 0.95, 'center_x': 0.5}
+		size_hint: 1.20, 0.45
+
+		canvas:
+			Color:
+				rgba: rgba('#C0DEE5')
+			RoundedRectangle:
+				size: self.size
+				pos: self.pos
+				radius: [0, 0, 0, 0]
+	FloatLayout:
+		pos_hint: {'center_y': 0.95, 'center_x': 0.56}
+		size_hint: 1.20, 0.45
+
+		canvas:
+			RoundedRectangle:
+				size: self.size
+				pos: self.pos
+				radius: [0, 0, 0, 0]
+		MDLabel:
+			text: ('[font=Fonts/Roboto-Blackitalic]HELP[/font]')
+			font_size: '40dp'
+			markup: True
+			halign: "center"
+			theme_text_color: 'Custom'
+			text_color: rgba('#003B46')
+			pos_hint: {'center_x': 0.5, 'center_y' : 0.33}
