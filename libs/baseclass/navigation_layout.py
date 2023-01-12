@@ -13,6 +13,7 @@ class NavLayoutScreen(Screen):
         time_dialog = MDTimePicker()
         time_dialog.set_time(datetime.now().time())
         time_dialog.bind(on_save=self.save_time, on_cancel=self.cancel_time)
+        time_dialog.title = "SET CAPTURING TIME"
         time_dialog.open()
 
     def save_time(self, instance, time):
