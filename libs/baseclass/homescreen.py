@@ -47,6 +47,8 @@ class HomeScreen(Screen):
         now = datetime.now()
         current_time = now.strftime("%I:%M %p")
         current_date = now.strftime("%B %d, %Y")
+        time_date_captured = now.strftime("%H:%M_%m-%d-%Y")
+        self.image_time_date = time_date_captured
         self.time_date = "As of " + current_time + ", " + current_date
 
         # Plant Status
@@ -60,7 +62,7 @@ class HomeScreen(Screen):
     def capture_plant(self):
         ret, frame = self.camera.read()
         if ret:
-            file_path = "/home/kurt/Documents/Embedded Systems/Plant-Disease-Detection/image.jpg"
+            file_path = "./Images/" + self.image_time_date + ".jpg"
             cv2.imwrite(file_path, frame)
             toast("Image saved!")
 
