@@ -57,5 +57,12 @@ class HomeScreen(Screen):
         self.security_status = "NO INTRUSION DETECTED"
         self.security_status_color = 1
 
+    def capture_plant(self):
+        ret, frame = self.camera.read()
+        if ret:
+            file_path = "/home/kurt/Documents/Embedded Systems/Plant-Disease-Detection/image.jpg"
+            cv2.imwrite(file_path, frame)
+            toast("Image saved!")
+
     def on_stop(self):
         self.camera.release()
