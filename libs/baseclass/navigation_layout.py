@@ -70,27 +70,22 @@ class NavLayoutScreen(Screen):
         
     def add_contact(self):
         if not self.dialog:
-            self.phone_number_field = MDTextField(hint_text="Enter phone number")
             self.dialog = MDDialog(
-                title="Add Contact",
+                title="ADD CONTACT",
                 type = "custom",
                 content_cls = AddContact(),
             )
         self.dialog.open()
-        
-    def save_contact(self, *args):
-        contact_number = self.phone_number_field.text
-        conn = sqlite3.connect("mybase.db")
-        cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS contacts(phone_number VARCHAR(30))")
-        cur.execute("INSERT INTO contacts(phone_number) VALUES(?)", (contact_number,))
-        cur.execute("SELECT * FROM contacts")
-        conn.commit()
-        toast('Contact Added Successfully.')
-        conn.close()
-        self.dialog.dismiss()
 
 class AddContact(BoxLayout):
     
     def save_contact(self, contact_add):
-        print(contact_add)
+        final_contact = str(contact_add)
+        conn = sqlite3.connect("mybase.db")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS contacts(phone_number VARCHAR(30))")
+        cur.execute("INSERT INTO contacts(phone_number) VALUES(?)", (final_contact,))
+        cur.execute("SELECT * FROM contacts")
+        conn.commit()
+        toast('Contact Added Successfully.')
+        conn.close()
