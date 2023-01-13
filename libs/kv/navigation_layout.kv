@@ -1,3 +1,5 @@
+#:import utils kivy.utils
+
 # form the design and layout of the hamburger menu
 <NavLayoutScreen>:
     MDNavigationLayout:
@@ -11,7 +13,7 @@
                         id: toolbar
                         title: 'Plant Monitoring'
                         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [["camera-timer", lambda x: root.plant_capture_timer()],]
+                        right_action_items: [["camera-timer", lambda x: root.plant_capture_timer()],["contacts", lambda x: root.add_contact()]]
                         theme_text_color: 'Custom'
                         md_bg_color: rgba('#2e593b')
                         specific_text_color: rgba('#FFFFFF')
@@ -90,3 +92,23 @@
                                 on_release:
                                     app.show_screen("help")
                                     nav_drawer.set_state("close")
+
+<AddContact>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "90dp"
+
+    MDTextField:
+		id: contact_add
+        hint_text: "Add a contact number for text notifications."
+		line_color_focus: rgba('#2e593b')
+
+	MDFillRoundFlatButton:
+		text: "Add"
+		theme_text_color: 'Custom'
+		md_bg_color: rgba('#2e593b')
+		text_color: utils.get_color_from_hex('#FFFFFF')
+		pos_hint: {'center_x': .93, 'center_y': .5}
+		on_release:
+			root.save_contact(contact_add.text)

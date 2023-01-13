@@ -6,6 +6,9 @@ from kivy.lang.builder import Builder
 from libs.baseclass import homescreen
 from kivymd.uix.pickers import MDTimePicker
 from kivymd.toast.kivytoast import toast
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.textfield import MDTextField
+from kivy.uix.boxlayout import BoxLayout
 
 # import pyfirmata
 # from pyfirmata import Arduino, util
@@ -14,6 +17,8 @@ from kivymd.toast.kivytoast import toast
 Builder.load_file('./libs/kv/navigation_layout.kv')
 
 class NavLayoutScreen(Screen):
+
+    dialog = None
 
     # def trial(self):
     #     # Connect to the Arduino board
@@ -62,3 +67,30 @@ class NavLayoutScreen(Screen):
     def set_time(self, instance, time):
         self.capture_time = time
         print(self.capture_time)
+        
+    def add_contact(self):
+        if not self.dialog:
+            self.phone_number_field = MDTextField(hint_text="Enter phone number")
+            self.dialog = MDDialog(
+                title="Add Contact",
+                type = "custom",
+                content_cls = AddContact(),
+            )
+        self.dialog.open()
+        
+    def save_contact(self, *args):
+        contact_number = self.phone_number_field.text
+        conn = sqlite3.connect("mybase.db")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS contacts(phone_number VARCHAR(30))")
+        cur.execute("INSERT INTO contacts(phone_number) VALUES(?)", (contact_number,))
+        cur.execute("SELECT * FROM contacts")
+        conn.commit()
+        toast('Contact Added Successfully.')
+        conn.close()
+        self.dialog.dismiss()
+
+class AddContact(BoxLayout):
+    
+    def save_contact(self, contact_add):
+        print(contact_add)
