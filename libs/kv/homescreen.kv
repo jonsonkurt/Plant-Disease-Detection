@@ -18,6 +18,22 @@
                 radius: [40,40,40,40]
 				size: self.size
 				pos: self.pos
+		BoxLayout:
+			pos_hint: {'center_y': 0.45, 'center_x': 0.5}
+			size_hint: 0.60, 0.50
+			canvas:
+				Color:
+					rgba: rgba('#2e593b')
+				RoundedRectangle:
+					radius: [40,40,40,40]
+					size: self.size
+					pos: self.pos
+			Image:
+				id: img
+				size_hint_y: None
+				radius: [40,40,40,40]
+				height: "250dp"
+				pos_hint: {'center_y': 0.5, 'center_x': 0.5}
 
 		MDIcon:
 			icon: 'video'
@@ -36,13 +52,14 @@
 			pos_hint: {'center_x': 0.62, 'center_y' : 0.85}
 
 	MDRoundFlatIconButton:
-		text: '  Capture Image    '
+		text: '  Capture Plant    '
 		halign: "center"
 		theme_text_color: 'Custom'
 		text_color: rgba('#FFFFFF')
 		md_bg_color: rgba('#2e593b')
 		line_color: rgba('#2e593b')
 		pos_hint: {'center_x': 0.23, 'center_y' : 0.16}
+		on_press: root.capture_plant()
 
     FloatLayout:
 		pos_hint: {'center_y': 0.73, 'center_x': 0.70}
@@ -134,8 +151,8 @@
 			canvas:
 				Color:
 					rgba:
-						(rgba('#2e593b') if root.plant_status_color == 1 \
-						else rgba('#BC5448') if root.plant_status_color == 2 else (0,0,0,0))
+						(rgba('#2e593b') if root.security_status_color == 1 \
+						else rgba('#BC5448') if root.security_status_color == 2 else (0,0,0,0))
 				RoundedRectangle:
 					radius: [30,30,30,30]
 					size: self.size
