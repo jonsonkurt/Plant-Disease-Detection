@@ -13,7 +13,9 @@
                         id: toolbar
                         title: 'Plant Monitoring'
                         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [["camera-timer", lambda x: root.plant_capture_timer()],["contacts", lambda x: root.add_contact()]]
+                        right_action_items:
+                            [["camera-timer", lambda x: root.plant_capture_timer()],\
+                            ["contacts", lambda x: root.add_contact()]]
                         theme_text_color: 'Custom'
                         md_bg_color: rgba('#2e593b')
                         specific_text_color: rgba('#FFFFFF')

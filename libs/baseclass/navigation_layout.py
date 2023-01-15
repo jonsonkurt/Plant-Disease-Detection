@@ -10,34 +10,11 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.textfield import MDTextField
 from kivy.uix.boxlayout import BoxLayout
 
-# import pyfirmata
-# from pyfirmata import Arduino, util
-# import time
-
 Builder.load_file('./libs/kv/navigation_layout.kv')
 
 class NavLayoutScreen(Screen):
 
     dialog = None
-
-    # def trial(self):
-    #     # Connect to the Arduino board
-    #     board = Arduino('/dev/ttyACM0')
-    #     it = util.Iterator(board)
-    #     it.start()
-
-    #     # Define the LED pin
-    #     led_pin = board.get_pin('d:13:o')
-
-    #     # Turn the LED on
-    #     led_pin.write(1)
-    #     time.sleep(5)
-
-    #     # Turn the LED off
-    #     led_pin.write(0)
-
-    #     # Close the connection to the board
-    #     board.exit() 
  
     def plant_capture_timer(self):
         time_dialog = MDTimePicker()
