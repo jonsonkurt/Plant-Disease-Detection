@@ -54,10 +54,11 @@ class HomeScreen(Screen):
     def security_warning(self):
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]INTRUSION DETECTED[/font]"
         security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]Motion Detected: No     Tripwire Interrupted: Yes[/font]"
-        security_icon_color = self.ids['security_label_icon_color'].color = '#BC5448'
-        security_label_color = self.ids['security_label_color'].text_color = '#BC5448'
+        # security_icon_color = self.ids['security_label_icon_color'].color = '#BC5448'
+        # security_label_color = self.ids['security_label_color'].text_color = '#BC5448'
 
-        return security_warning_text, security_warning_text2, security_icon_color, security_label_color
+        # return security_warning_text, security_warning_text2, security_icon_color, security_label_color
+        return security_warning_text, security_warning_text2
 
     def on_enter(self):
         self.status()
@@ -68,6 +69,7 @@ class HomeScreen(Screen):
         self.add_widget(self.layout)
         Clock.schedule_interval(self.update, 1.0/30.0)
         
+        # COMMENT OUT THIS IF AN ARDUINO IS CONNECTED
         self.board = Arduino('COM3')
         self.it = util.Iterator(self.board)
         self.it.start()

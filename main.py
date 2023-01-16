@@ -24,7 +24,7 @@ class MyApp(MDApp):
 
     def build(self):
 
-        #self.icon = 'plant_monitoring_system.ico'
+        self.icon = 'plant_monitoring_system.ico'
         self.theme_cls.primary_palette = "LightGreen"
         screen = Builder.load_file("main.kv")
         return screen
