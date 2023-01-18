@@ -59,7 +59,8 @@
 		md_bg_color: rgba('#2e593b')
 		line_color: rgba('#2e593b')
 		pos_hint: {'center_x': 0.23, 'center_y' : 0.16}
-		on_press: root.capture_plant()
+		#on_press: root.capture_plant()
+		on_press: root.try_detect()
 
     FloatLayout:
 		pos_hint: {'center_y': 0.73, 'center_x': 0.70}
@@ -102,8 +103,7 @@
 					pos: self.pos
 			MDLabel:
 				id: plant_text
-				#text: ('[font=Fonts/Roboto-Black]' + root.plant_status + '[/font]')
-				text: 'NO DISEASE DETECTED'
+				text: ('[font=Fonts/Roboto-Black]NO DISEASE DETECTED[/font]')
 				bold: True
 				font_size: '20dp'
 				markup: True
@@ -113,6 +113,7 @@
 				pos_hint: {'center_x': 0.5, 'center_y' : 0.5}
 
 		MDLabel:
+			id: plant_text2
 			text: '[font=Fonts/Roboto-MediumItalic]' + root.time_date + '[/font]'
 			font_size: '13dp'
 			markup: True
@@ -156,7 +157,9 @@
 			size_hint: 0.80, 0.38
 			canvas:
 				Color:
-					rgba:rgba('#2e593b')
+					rgba:
+						(rgba('#2e593b') if root.security_status_color == 1 \
+						else rgba('#BC5448') if root.security_status_color == 2 else (0,0,0,0))
 				RoundedRectangle:
 					radius: [30,30,30,30]
 					size: self.size
