@@ -34,25 +34,32 @@ class HomeScreen(Screen):
     plant_status_color = NumericProperty()
     security_status_color = NumericProperty()
 
-    # def trial(self):
+    # def gsm(self):
     #     # Turn the LED on
     #     self.led_pin.write(1)
-    #     time.sleep(5)
+    #     time.sleep(10)
 
     #     # Turn the LED off
     #     self.led_pin.write(0)
         
-    # def trial2(self):
-    #     t = threading.Thread(target=self.trial)
+    # def activate_gsm(self):
+    #     t = threading.Thread(target=self.gsm)
     #     t.start()
-        
+
+    def security_warning2(self):
+        security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]NO INTRUSION DETECTED[/font]"
+        security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]Motion Detected: No     Tripwire Interrupted: No[/font]"
+        return security_warning_text, security_warning_text2
+
     def tripwire_alarm(self):
         while True:
             self.HIGH = True
             self.prev_button_state = self.pushbutton.read() 
             if self.prev_button_state == self.HIGH:
+                # self.activate_gsm()
                 self.security_warning()
-                #Add another line to call a function that reverts to no intrusion detected
+                time.sleep(5) # Adjust this for longer intrusion alert display
+                self.security_warning2()
                 
     def tripwire_activator(self):
         t = threading.Thread(target=self.tripwire_alarm)
@@ -67,31 +74,7 @@ class HomeScreen(Screen):
     def security_warning(self):
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]INTRUSION DETECTED[/font]"
         security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]Motion Detected: No     Tripwire Interrupted: Yes[/font]"
-        # security_icon_color = self.ids['security_label_icon_color'].color = '#BC5448'
-        # security_label_color = self.ids['security_label_color'].text_color = '#BC5448'
-
-        # return security_warning_text, security_warning_text2, security_icon_color, security_label_color
         return security_warning_text, security_warning_text2
-
-    def check_time_and_scan(self):
-        # Connect to the database
-        conn = sqlite3.connect("mybase.db")
-        cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS scanning_time(plant_scanning_time VARCHAR(30))")
-
-        # Get the time from the database
-        cur.execute("SELECT max(plant_scanning_time) FROM scanning_time")
-        db_time = cur.fetchone()[0]
-
-        # Get the current time
-        current_time = datetime.now().strftime("%H:%M:%S")
-
-        # Compare the times
-        if db_time == current_time:
-            # self.call_camera()
-            # button = self.ids['capture_button']
-            # button.dispatch('on_press')
-            print('Why')
 
     def call_camera(self):
         t = threading.Thread(target=self.capture_plant)
@@ -114,8 +97,8 @@ class HomeScreen(Screen):
 
     def listen_to_db_changes(self):
         conn = sqlite3.connect('mybase.db')
-        c = conn.cursor()
-        c.execute("""
+        cur = conn.cursor()
+        cur.execute("""
             CREATE TRIGGER IF NOT EXISTS update_label
             AFTER UPDATE ON plant_status 
             BEGIN
@@ -124,18 +107,18 @@ class HomeScreen(Screen):
         """)
         conn.commit()
 
-        c.execute("SELECT disease_history FROM plant_status ORDER BY id_num DESC LIMIT 1")
-        result = c.fetchone()[0]
+        cur.execute("SELECT disease_history FROM plant_status ORDER BY id_num DESC LIMIT 1")
+        result = cur.fetchone()[0]
 
-        c.execute("""
+        cur.execute("""
             SELECT name FROM sqlite_master WHERE type='trigger'
         """)
-        triggers = c.fetchall()
+        triggers = cur.fetchall()
         print(triggers)
 
         while True:
-            c.execute("SELECT disease_history FROM plant_status ORDER BY id_num DESC LIMIT 1")
-            result = c.fetchone()[0]
+            cur.execute("SELECT disease_history FROM plant_status ORDER BY id_num DESC LIMIT 1")
+            result = cur.fetchone()[0]
             self.disease_warning(result)
 
     def start_cam(self):
@@ -147,20 +130,27 @@ class HomeScreen(Screen):
         self.img = Image()
         Clock.schedule_interval(self.update, 1.0/30.0)
 
+    def start_hardware(self):
+        t = threading.Thread(target=self.hardware)
+        t.start()
+        
+    def hardware(self):
+        # COMMENT OUT THIS IF AN ARDUINO IS CONNECTED
+        self.board = Arduino('COM3')
+        self.it = util.Iterator(self.board)
+        self.it.start()
+        self.led_pin = self.board.get_pin('d:13:o')
+        self.pushbutton = self.board.get_pin('d:8:i')
+        
+        self.tripwire_activator()
+
     def on_enter(self):
-        self.start_checking_time()
         self.status()
         self.get_pstatus()
-        self.start_cam()
 
-        # COMMENT OUT THIS IF AN ARDUINO IS CONNECTED
-        # self.board = Arduino('COM3')
-        # self.it = util.Iterator(self.board)
-        # self.it.start()
-        # # self.led_pin = self.board.get_pin('d:13:o')
-        # self.pushbutton = self.board.get_pin('d:8:i')
-        
-        # self.tripwire_activator()
+    def on_pre_enter(self):
+        self.start_hardware()
+        self.start_cam()
 
     def update(self, dt):
         ret, frame = self.camera.read()
@@ -170,6 +160,22 @@ class HomeScreen(Screen):
             texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
             texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
             self.ids.img.texture = texture
+        
+        conn = sqlite3.connect("mybase.db")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS scanning_time(plant_scanning_time VARCHAR(30))")
+
+        # Get the time from the database
+        cur.execute("SELECT max(plant_scanning_time) FROM scanning_time")
+        db_time = cur.fetchone()[0]
+
+        # Get the current time
+        current_time = datetime.now().strftime("%H:%M:%S")
+
+        # Compare the times
+        if db_time == current_time:
+            self.capture_plant()
+            print('Checking for disease')
 
     def status(self):
         
@@ -194,7 +200,6 @@ class HomeScreen(Screen):
             self.time_date_captured = now.strftime("%H-%M_%m-%d-%Y")
             print(self.time_date_captured)
             self.image_time_date = self.time_date_captured
-            #file_path = "./yolov5/data/images/" + self.image_time_date + ".jpg"
             file_path = "./yolov5/data/images/plant.jpg"
             file_path2 = "./images/" + self.image_time_date + ".jpg"
             cv2.imwrite(file_path, frame)
@@ -243,15 +248,8 @@ class HomeScreen(Screen):
 
                 print('MAY DISEASE PO')
 
-    # def on_leave(self):
-    #     self.camera.release()
-    #     cv2.destroyAllWindows()
-    #     print('bye')
-        
-        # Close the connection to the board
-        #self.board.exit() 
-        
     def on_exit(self):
         self.camera.release()
         self.layout.remove_widget(self.img)
         Clock.unschedule(self.update)
+        self.board.exit()
