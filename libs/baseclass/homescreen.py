@@ -44,23 +44,26 @@ class HomeScreen(Screen):
         self.it.start()
         self.led_pin = self.board.get_pin('d:13:o')
         self.pushbutton = self.board.get_pin('d:8:i')
+        #Add the pins of tripwire, motion sensor, and GSM here
         
         self.tripwire_activator()
-        #Add motion sensor here self.msensor_activator()
+        #Add motion sensor using this self.msensor_activator()
+        #Add GSM using this self.gsm_activator()
 
     # def gsm(self):
+    #     #Palitan na lang laman ng method na ito
     #     # Turn the LED on
     #     self.led_pin.write(1)
     #     time.sleep(10)
-
     #     # Turn the LED off
     #     self.led_pin.write(0)
         
-    # def activate_gsm(self):
+    # def gsm_activator(self):
     #     t = threading.Thread(target=self.gsm)
     #     t.start()
 
     def motion_sensor(self):
+        #Palitan na lang laman ng method na ito
         while True:
             self.HIGH = True
             self.prev_button_state = self.pushbutton.read() 
@@ -75,6 +78,7 @@ class HomeScreen(Screen):
         t.start()
 
     def tripwire_alarm(self):
+        #Palitan na lang laman ng method na ito
         while True:
             self.HIGH = True
             self.prev_button_state = self.pushbutton.read() 
