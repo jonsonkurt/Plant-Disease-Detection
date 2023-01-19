@@ -52,6 +52,7 @@
 			pos_hint: {'center_x': 0.62, 'center_y' : 0.85}
 
 	MDRoundFlatIconButton:
+		id: capture_button
 		text: '  Capture Plant    '
 		halign: "center"
 		theme_text_color: 'Custom'
@@ -59,8 +60,9 @@
 		md_bg_color: rgba('#2e593b')
 		line_color: rgba('#2e593b')
 		pos_hint: {'center_x': 0.23, 'center_y' : 0.16}
-		#on_press: root.capture_plant()
-		on_press: root.try_detect()
+		on_press: root.capture_plant()
+		#on_press: root.start_detect()
+		#on_press: root.disease_warning()
 
     FloatLayout:
 		pos_hint: {'center_y': 0.73, 'center_x': 0.70}

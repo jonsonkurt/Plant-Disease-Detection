@@ -22,6 +22,8 @@ from kivy.graphics import Color
 
 from yolov5 import detect
 
+import schedule
+
 Builder.load_file('./libs/kv/homescreen.kv')
 
 class HomeScreen(Screen):
@@ -56,26 +58,11 @@ class HomeScreen(Screen):
         t = threading.Thread(target=self.tripwire_alarm)
         t.start()
 
-    def disease_activator(self):
-        t = threading.Thread(target=self.disease_warning)
-        t.start()
-
-    def disease_warning(self):
-        last_value = None
-        while True:
-            conn = sqlite3.connect("mybase.db")
-            cur = conn.cursor()
-            cur.execute("CREATE TABLE IF NOT EXISTS plant_status(disease_history VARCHAR(30), time_date VARCHAR(30))")
-            cur.execute("SELECT time_date FROM plant_status ORDER BY time_date DESC LIMIT 1")
-            last_item = cur.fetchone()[0]
-            
-            if last_item != last_value:
-                last_value = last_item
-                print("haya")
-            time.sleep(1)
-                # disease_warning_text = self.ids['plant_text'].text = "[font=Fonts/Roboto-Black]" + last_item + "[/font]"
-                # disease_warning_text2 = self.ids['plant_text2'].text = "[font=Fonts/Roboto-MediumItalic]" + self.time_date + "[/font]"
-                # return disease_warning_text, disease_warning_text2
+    def disease_warning(self,status):
+        pstatus = status
+        disease_warning_text = self.ids['plant_text'].text = "[font=Fonts/Roboto-Black]" + pstatus + "[/font]"
+        disease_warning_text2 = self.ids['plant_text2'].text = "[font=Fonts/Roboto-MediumItalic]" + self.time_date + "[/font]"
+        return disease_warning_text, disease_warning_text2
 
     def security_warning(self):
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]INTRUSION DETECTED[/font]"
@@ -86,16 +73,86 @@ class HomeScreen(Screen):
         # return security_warning_text, security_warning_text2, security_icon_color, security_label_color
         return security_warning_text, security_warning_text2
 
-    def on_enter(self):
-        self.status()
-        # self.disease_activator()
+    def check_time_and_scan(self):
+        # Connect to the database
+        conn = sqlite3.connect("mybase.db")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS scanning_time(plant_scanning_time VARCHAR(30))")
+
+        # Get the time from the database
+        cur.execute("SELECT max(plant_scanning_time) FROM scanning_time")
+        db_time = cur.fetchone()[0]
+
+        # Get the current time
+        current_time = datetime.now().strftime("%H:%M:%S")
+
+        # Compare the times
+        if db_time == current_time:
+            # self.call_camera()
+            # button = self.ids['capture_button']
+            # button.dispatch('on_press')
+            print('Why')
+
+    def call_camera(self):
+        t = threading.Thread(target=self.capture_plant)
+        t.start()
+
+    def check_time(self):
+        schedule.every(1).seconds.do(self.check_time_and_scan)
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    def start_checking_time(self):
+        t = threading.Thread(target=self.check_time)
+        t.start()
+
+    def get_pstatus(self):
+        t = threading.Thread(target=self.listen_to_db_changes)
+        t.start()
+
+    def listen_to_db_changes(self):
+        conn = sqlite3.connect('mybase.db')
+        c = conn.cursor()
+        c.execute("""
+            CREATE TRIGGER IF NOT EXISTS update_label
+            AFTER UPDATE ON plant_status 
+            BEGIN
+                UPDATE label_text SET text = new.disease_history  ;
+            END;
+        """)
+        conn.commit()
+
+        c.execute("SELECT disease_history FROM plant_status ORDER BY id_num DESC LIMIT 1")
+        result = c.fetchone()[0]
+
+        c.execute("""
+            SELECT name FROM sqlite_master WHERE type='trigger'
+        """)
+        triggers = c.fetchall()
+        print(triggers)
+
+        while True:
+            c.execute("SELECT disease_history FROM plant_status ORDER BY id_num DESC LIMIT 1")
+            result = c.fetchone()[0]
+            self.disease_warning(result)
+
+    def start_cam(self):
+        t = threading.Thread(target=self.cam)
+        t.start()
+        
+    def cam(self):
         self.camera = cv2.VideoCapture(0)
         self.img = Image()
-        self.layout = FloatLayout()
-        self.layout.add_widget(self.img)
-        self.add_widget(self.layout)
         Clock.schedule_interval(self.update, 1.0/30.0)
-        
+
+    def on_enter(self):
+        self.start_checking_time()
+        self.status()
+        self.get_pstatus()
+        self.start_cam()
+
         # COMMENT OUT THIS IF AN ARDUINO IS CONNECTED
         # self.board = Arduino('COM3')
         # self.it = util.Iterator(self.board)
@@ -137,16 +194,19 @@ class HomeScreen(Screen):
             self.time_date_captured = now.strftime("%H-%M_%m-%d-%Y")
             print(self.time_date_captured)
             self.image_time_date = self.time_date_captured
-            file_path = "./images/" + self.image_time_date + ".png"
-            #file_path = "./images/.png"
+            #file_path = "./yolov5/data/images/" + self.image_time_date + ".jpg"
+            file_path = "./yolov5/data/images/plant.jpg"
+            file_path2 = "./images/" + self.image_time_date + ".jpg"
             cv2.imwrite(file_path, frame)
+            cv2.imwrite(file_path2, frame)
             toast("Image saved!")
+            self.start_detect()
 
-    def try_detect2(self):
+    def start_detect2(self):
         detect.run()
 
-    def try_detect(self,):
-        t = threading.Thread(target=self.try_detect2)
+    def start_detect(self,):
+        t = threading.Thread(target=self.start_detect2)
         t.start()
 
     def check_disease(self, path):
@@ -165,7 +225,7 @@ class HomeScreen(Screen):
             dir = os.listdir(folder_path)
             if len(dir) == 0:
                 pstatus = "NO DISEASE DETECTED"
-                cur.execute("CREATE TABLE IF NOT EXISTS plant_status(disease_history VARCHAR(30), time_date VARCHAR(30))")
+                cur.execute("CREATE TABLE IF NOT EXISTS plant_status(id_num integer PRIMARY KEY, disease_history VARCHAR(30), time_date VARCHAR(30))")
                 cur.execute("INSERT INTO plant_status(disease_history, time_date) VALUES(?,?)", (pstatus, pstatus_date,))
                 cur.execute("SELECT * FROM plant_status")
                 conn.commit()
@@ -175,7 +235,7 @@ class HomeScreen(Screen):
             else:
                 pstatus = "DISEASE DETECTED"
                 
-                cur.execute("CREATE TABLE IF NOT EXISTS plant_status(disease_history VARCHAR(30), time_date VARCHAR(30))")
+                cur.execute("CREATE TABLE IF NOT EXISTS plant_status(id_num integer PRIMARY KEY, disease_history VARCHAR(30), time_date VARCHAR(30))")
                 cur.execute("INSERT INTO plant_status(disease_history, time_date) VALUES(?,?)", (pstatus, pstatus_date,))
                 cur.execute("SELECT * FROM plant_status")
                 conn.commit()
@@ -183,8 +243,15 @@ class HomeScreen(Screen):
 
                 print('MAY DISEASE PO')
 
-    def on_stop(self):
-        self.camera.release()
+    # def on_leave(self):
+    #     self.camera.release()
+    #     cv2.destroyAllWindows()
+    #     print('bye')
         
         # Close the connection to the board
-        self.board.exit() 
+        #self.board.exit() 
+        
+    def on_exit(self):
+        self.camera.release()
+        self.layout.remove_widget(self.img)
+        Clock.unschedule(self.update)
