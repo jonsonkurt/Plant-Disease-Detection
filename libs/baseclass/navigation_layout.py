@@ -29,7 +29,7 @@ class NavLayoutScreen(Screen):
         conn = sqlite3.connect("mybase.db")
         cur = conn.cursor()
         
-        cur.execute("CREATE TABLE IF NOT EXISTS scanning_time(plant_scanning_time VARCHAR(30))")
+        cur.execute("CREATE TABLE IF NOT EXISTS scanning_time(id_num integer PRIMARY KEY, plant_scanning_time VARCHAR(30))")
         cur.execute("INSERT INTO scanning_time(plant_scanning_time) VALUES(?)", (final_time,))
         cur.execute("SELECT * FROM scanning_time")
         conn.commit()
