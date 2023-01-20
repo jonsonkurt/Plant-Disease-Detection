@@ -3,7 +3,7 @@ import sqlite3
 import cv2
 import time
 import threading
-
+from kivy.uix.floatlayout import FloatLayout
 from kivy.lang.builder import Builder
 from kivymd.toast.kivytoast import toast
 from kivy.uix.screenmanager import Screen
@@ -15,6 +15,7 @@ from kivy.graphics.texture import Texture
 from pyfirmata import Arduino, util
 from yolov5 import detect
 
+
 Builder.load_file('./libs/kv/homescreen.kv')
 
 class HomeScreen(Screen):
@@ -24,10 +25,11 @@ class HomeScreen(Screen):
     security_status = StringProperty()
     plant_status_color = NumericProperty()
     security_status_color = NumericProperty()
+    motion_detected = StringProperty("Yes")
 
     def on_pre_enter(self):
         self.start_hardware()
-        self.start_cam()
+        #self.start_cam()
 
     def on_enter(self):
         self.status()
@@ -42,51 +44,91 @@ class HomeScreen(Screen):
         self.board = Arduino('COM3')
         self.it = util.Iterator(self.board)
         self.it.start()
-        self.led_pin = self.board.get_pin('d:13:o')
-        self.pushbutton = self.board.get_pin('d:8:i')
+        self.laser_sensor = self.board.get_pin('a:0:i')
+        self.buzzer = self.board.get_pin('d:8:o')
+        self.pirPin = self.board.get_pin('a:1:i')
+        
+        self.HIGH = True
+        self.LOW = False
+        self.calibrationTime = 30
+        self.pause = 5000
+        self.lockLow = True
+        self.takeLowTime = False
+        self.PIRValue = 0
+        self.number = "09272343635"
+        self._timeout = 0
+        self._buffer = ""
+        self.ldr_val = 0
         #Add the pins of tripwire, motion sensor, and GSM here
         
         self.tripwire_activator()
         #Add motion sensor using this self.msensor_activator()
         #Add GSM using this self.gsm_activator()
 
-    # def gsm(self):
-    #     #Palitan na lang laman ng method na ito
-    #     # Turn the LED on
-    #     self.led_pin.write(1)
-    #     time.sleep(10)
-    #     # Turn the LED off
-    #     self.led_pin.write(0)
+    def gsm(self):
+        self.tx.write("AT+CMGF=1")
+        time.sleep(1)
+        self.tx.write('AT+CMGS=\"' + "09272343635" + '\"\r"')
+        time.sleep(1)
+        self.tx.write("Motion Detected. There is a potential intruder or disturbance on your farm.")
+        time.sleep(1)
+        self.tx.write(ascii.ctrl('z'))
+        time.sleep(1)
+        print("DONE")
         
-    # def gsm_activator(self):
-    #     t = threading.Thread(target=self.gsm)
-    #     t.start()
-
-    def motion_sensor(self):
-        #Palitan na lang laman ng method na ito
-        while True:
-            self.HIGH = True
-            self.prev_button_state = self.pushbutton.read() 
-            if self.prev_button_state == self.HIGH:
-                # self.activate_gsm()
-                self.security_warning()
-                time.sleep(5) # Adjust this for longer intrusion alert display
-                self.security_warning2()
-                
-    def msensor_activator(self):
-        t = threading.Thread(target=self.motion_sensor)
+    def gsm_activator(self):
+        t = threading.Thread(target=self.gsm)
         t.start()
+
 
     def tripwire_alarm(self):
         #Palitan na lang laman ng method na ito
         while True:
-            self.HIGH = True
-            self.prev_button_state = self.pushbutton.read() 
-            if self.prev_button_state == self.HIGH:
-                # self.activate_gsm()
+            self.ldr_val = self.laser_sensor.read()
+            
+            if self.ldr_val == None:
+                continue
+            
+            if self.ldr_val > 0.5:
+                #print("Buzzer ringing")
+                self.buzzer.write(1)
+                #self.laser_message() 
                 self.security_warning()
                 time.sleep(5) # Adjust this for longer intrusion alert display
                 self.security_warning2()
+                self.gsm_activator()
+            
+            else:
+                self.buzzer.write(0)
+####
+            self.motion_sensor = self.pirPin.read()
+            print(self.motion_sensor)
+            if self.motion_sensor == None:
+                 continue
+            if self.motion_sensor > 0.6:
+                self.security_warning()
+                time.sleep(5) # Adjust this for longer intrusion alert display
+                self.security_warning2()
+                if self.lockLow == True:
+                     self.PIRValue = 1
+                     self.lockLow = False
+                     # self.motion_message()
+                     time.sleep(1)
+                    
+            if self.motion_sensor < 0.01:
+                
+                 if self.takeLowTime == False:
+                     self.lowIn = time.perf_counter()
+                     self.takeLowTime = False
+                
+                 if not self.lockLow and time.perf_counter() - self.lowIn > self.pause:
+                     self.PIRValue = 0
+                     self.lockLow = True
+                     time.sleep(.5)
+                    
+            time.sleep(1)
+        
+
                 
     def tripwire_activator(self):
         t = threading.Thread(target=self.tripwire_alarm)
@@ -99,6 +141,9 @@ class HomeScreen(Screen):
     def cam(self):
         self.camera = cv2.VideoCapture(0)
         self.img = Image()
+        self.layout = FloatLayout()
+        self.layout.add_widget(self.img)
+        self.add_widget(self.layout)
         Clock.schedule_interval(self.update, 1.0/30.0)
 
     def update(self, dt):
@@ -250,12 +295,12 @@ class HomeScreen(Screen):
 
     def security_warning(self):
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]INTRUSION DETECTED[/font]"
-        security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]Motion Detected: No     Tripwire Interrupted: Yes[/font]"
+        security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]There is a potential intruder or disturbance on your farm.[/font]"
         return security_warning_text, security_warning_text2
 
     def security_warning2(self):
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]NO INTRUSION DETECTED[/font]"
-        security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]Motion Detected: No     Tripwire Interrupted: No[/font]"
+        security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic] [/font]"
         return security_warning_text, security_warning_text2
 
     def on_exit(self):
