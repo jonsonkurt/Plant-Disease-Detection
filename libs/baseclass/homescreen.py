@@ -88,7 +88,7 @@ class HomeScreen(Screen):
             
             if self.ldr_val == None:
                 continue
-            
+            # get val of ldr
             if self.ldr_val > 0.5:
                 #print("Buzzer ringing")
                 self.buzzer.write(1)
