@@ -62,10 +62,10 @@ class HomeScreen(Screen):
 
     def on_pre_enter(self):
         self.start_hardware()
-        self.start_cam()
 
     def on_enter(self):
         self.status()
+        self.start_cam()
         self.get_pstatus()
 
     def start_hardware(self):
@@ -186,7 +186,6 @@ class HomeScreen(Screen):
         
     def cam(self):
         self.camera = cv2.VideoCapture(0)
-        self.img = Image()
         Clock.schedule_interval(self.update, 1.0/30.0)
 
     def update(self, dt):
