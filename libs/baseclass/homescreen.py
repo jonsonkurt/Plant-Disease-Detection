@@ -20,9 +20,6 @@ from kivy.clock import Clock
 from kivy.utils import get_color_from_hex
 
 Builder.load_file('./libs/kv/homescreen.kv')
-
-    
-
         
 class HomeScreen(Screen):
 
@@ -36,7 +33,6 @@ class HomeScreen(Screen):
     color_disease = ListProperty([1, 1, 1, 1])
     is_activated = BooleanProperty(False)
     is_disease = BooleanProperty(False)
-    
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -56,22 +52,17 @@ class HomeScreen(Screen):
             self.color = get_color_from_hex('#2e593b')
     
     def update_color1(self, dt): 
-        print(self.is_disease)
+        #print(self.is_disease)
         if self.is_disease == True:       
             change_color1 = ['#BC5448', '#2e593b']
             self.color_disease = get_color_from_hex(change_color1[self.j])
             self.j = (self.j + 1) % len(change_color1)
         else:
             self.color_disease = get_color_from_hex('#2e593b')
-            
 
-    
-    # def get_colors(self, color):
-    #     return self.color
-    
     def on_pre_enter(self):
-        self.start_hardware()
-        #self.start_cam()
+        #self.start_hardware()
+        self.start_cam()
 
     def on_enter(self):
         self.status()
@@ -122,7 +113,6 @@ class HomeScreen(Screen):
         t = threading.Thread(target=self.gsm)
         t.start()
 
-
     def tripwire_alarm(self):
         #Palitan na lang laman ng method na ito
         while True:
@@ -170,9 +160,7 @@ class HomeScreen(Screen):
                      time.sleep(.5)
                     
             time.sleep(1)
-        
 
-                
     def tripwire_activator(self):
         t = threading.Thread(target=self.tripwire_alarm)
         t.start()
@@ -184,9 +172,6 @@ class HomeScreen(Screen):
     def cam(self):
         self.camera = cv2.VideoCapture(0)
         self.img = Image()
-        self.layout = FloatLayout()
-        self.layout.add_widget(self.img)
-        self.add_widget(self.layout)
         Clock.schedule_interval(self.update, 1.0/30.0)
 
     def update(self, dt):
@@ -226,7 +211,7 @@ class HomeScreen(Screen):
             cv2.imwrite(file_path, frame)
             cv2.imwrite(file_path2, frame)
             toast("Image saved!")
-            self.start_detect()
+            self.start_detect2()
 
     def start_detect2(self):
         detect.run()
