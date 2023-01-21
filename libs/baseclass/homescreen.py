@@ -61,11 +61,13 @@ class HomeScreen(Screen):
             self.color_disease = get_color_from_hex('#2e593b')
 
     def on_pre_enter(self):
+        
         self.start_hardware()
+        self.start_cam()
 
     def on_enter(self):
         self.status()
-        self.start_cam()
+        
         self.get_pstatus()
 
     def start_hardware(self):
@@ -77,28 +79,28 @@ class HomeScreen(Screen):
         self.board = Arduino('COM3')
         self.it = util.Iterator(self.board)
         self.it.start()
-        # self.laser_sensor = self.board.get_pin('a:0:i')
-        # self.buzzer = self.board.get_pin('d:8:o')
-        # self.pirPin = self.board.get_pin('a:1:i')
+        self.laser_sensor = self.board.get_pin('a:0:i')
+        self.buzzer = self.board.get_pin('d:8:o')
+        self.pirPin = self.board.get_pin('a:1:i')
         
-        # self.HIGH = True
-        # self.LOW = False
-        # self.calibrationTime = 30
-        # self.pause = 5000
-        # self.lockLow = True
-        # self.takeLowTime = False
-        # self.PIRValue = 0
-        # self.number = "09272343635"
-        # self._timeout = 0
-        # self._buffer = ""
-        # self.ldr_val = 0
-        # #Add the pins of tripwire, motion sensor, and GSM here
+        self.HIGH = True
+        self.LOW = False
+        self.calibrationTime = 30
+        self.pause = 5000
+        self.lockLow = True
+        self.takeLowTime = False
+        self.PIRValue = 0
+        self.number = "09272343635"
+        self._timeout = 0
+        self._buffer = ""
+        self.ldr_val = 0
+        #Add the pins of tripwire, motion sensor, and GSM here
         
-        # self.tripwire_activator()
+        self.tripwire_activator()
         # Add GSM using this self.gsm_activator()
         
-        self.pushbutton = self.board.get_pin('d:8:i')
-        self.button_activator()
+        # self.pushbutton = self.board.get_pin('d:8:i')
+        # self.button_activator()
 
     def button(self):
         while True:
@@ -177,6 +179,7 @@ class HomeScreen(Screen):
             time.sleep(1)
 
     def tripwire_activator(self):
+        print('TRIPWIRE ACTIVATOR')
         t = threading.Thread(target=self.tripwire_alarm)
         t.start()
 
@@ -356,6 +359,6 @@ class HomeScreen(Screen):
 
     def on_exit(self):
         self.camera.release()
-        self.layout.remove_widget(self.img)
+        #self.layout.remove_widget(self.img)
         Clock.unschedule(self.update)
         self.board.exit()
