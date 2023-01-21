@@ -8,16 +8,22 @@ from kivy.lang.builder import Builder
 from kivymd.toast.kivytoast import toast
 from kivy.uix.screenmanager import Screen
 from datetime import datetime
-from kivy.properties import StringProperty, NumericProperty
+from kivy.properties import StringProperty, NumericProperty, ListProperty, BooleanProperty
 from kivy.uix.image import Image
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from pyfirmata import Arduino, util
 from yolov5 import detect
-
+# -----------------------------------
+from kivymd.uix.card import MDCard
+from kivy.clock import Clock
+from kivy.utils import get_color_from_hex
 
 Builder.load_file('./libs/kv/homescreen.kv')
 
+    
+
+        
 class HomeScreen(Screen):
 
     time_date = StringProperty()
@@ -26,7 +32,43 @@ class HomeScreen(Screen):
     plant_status_color = NumericProperty()
     security_status_color = NumericProperty()
     motion_detected = StringProperty("Yes")
+    color = ListProperty([1, 1, 1, 1])
+    color_disease = ListProperty([1, 1, 1, 1])
+    is_activated = BooleanProperty(False)
+    is_disease = BooleanProperty(False)
+    
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.i = 0 # index into change color list
+        self.j = 0
 
+    def on_kv_post(self, base_widget):
+        Clock.schedule_interval(self.update_color, .5)
+        Clock.schedule_interval(self.update_color1, .5)
+
+    def update_color(self, dt):
+        if self.is_activated == True and self.is_disease == True:
+            change_color = ['#BC5448', '#2e593b']
+            self.color = get_color_from_hex(change_color[self.i])
+            self.i = (self.i + 1) % len(change_color)  # loop through all the colors
+        else:
+            self.color = get_color_from_hex('#2e593b')
+    
+    def update_color1(self, dt): 
+        print(self.is_disease)
+        if self.is_disease == True:       
+            change_color1 = ['#BC5448', '#2e593b']
+            self.color_disease = get_color_from_hex(change_color1[self.j])
+            self.j = (self.j + 1) % len(change_color1)
+        else:
+            self.color_disease = get_color_from_hex('#2e593b')
+            
+
+    
+    # def get_colors(self, color):
+    #     return self.color
+    
     def on_pre_enter(self):
         self.start_hardware()
         #self.start_cam()
@@ -84,6 +126,7 @@ class HomeScreen(Screen):
     def tripwire_alarm(self):
         #Palitan na lang laman ng method na ito
         while True:
+            self.motion_sensor = self.pirPin.read()
             self.ldr_val = self.laser_sensor.read()
             
             if self.ldr_val == None:
@@ -94,20 +137,20 @@ class HomeScreen(Screen):
                 self.buzzer.write(1)
                 #self.laser_message() 
                 self.security_warning()
-                time.sleep(5) # Adjust this for longer intrusion alert display
+                time.sleep(2) # Adjust this for longer intrusion alert display
                 self.security_warning2()
                 self.gsm_activator()
             
             else:
                 self.buzzer.write(0)
 ####
-            self.motion_sensor = self.pirPin.read()
-            print(self.motion_sensor)
+
+            print("MOTION SENSOR:  ", self.motion_sensor)
             if self.motion_sensor == None:
                  continue
-            if self.motion_sensor > 0.6:
+            if self.motion_sensor > 0.3:
                 self.security_warning()
-                time.sleep(5) # Adjust this for longer intrusion alert display
+                time.sleep(2) # Adjust this for longer intrusion alert display
                 self.security_warning2()
                 if self.lockLow == True:
                      self.PIRValue = 1
@@ -207,13 +250,14 @@ class HomeScreen(Screen):
             # self.disease_warning()
             dir = os.listdir(folder_path)
             if len(dir) == 0:
+                
                 pstatus = "NO DISEASE DETECTED"
                 cur.execute("CREATE TABLE IF NOT EXISTS plant_status(id_num integer PRIMARY KEY, disease_history VARCHAR(30), time_date VARCHAR(30))")
                 cur.execute("INSERT INTO plant_status(disease_history, time_date) VALUES(?,?)", (pstatus, pstatus_date,))
                 cur.execute("SELECT * FROM plant_status")
                 conn.commit()
                 conn.close()
-
+                
                 print('WALA PONG DISEASE')
             else:
                 pstatus = "DISEASE DETECTED"
@@ -256,6 +300,11 @@ class HomeScreen(Screen):
             result = cur.fetchone()
             disease_history = result[0]
             time_date = result[1]
+            if disease_history == "DISEASE DETECTED":
+                self.is_disease = True
+            else:
+                self.is_disease = False
+            
             self.disease_warning(disease_history, time_date)
 
     def status(self):
@@ -291,14 +340,17 @@ class HomeScreen(Screen):
         
         disease_warning_text = self.ids['plant_text'].text = "[font=Fonts/Roboto-Black]" + pstatus + "[/font]"
         disease_warning_text2 = self.ids['plant_text2'].text = "[font=Fonts/Roboto-MediumItalic]" + formatted_date + "[/font]"
+        
         return disease_warning_text, disease_warning_text2
 
     def security_warning(self):
+        self.is_activated = True
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]INTRUSION DETECTED[/font]"
         security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic]There is a potential intruder or disturbance on your farm.[/font]"
         return security_warning_text, security_warning_text2
 
     def security_warning2(self):
+        self.is_activated = False
         security_warning_text = self.ids['security_text'].text = "[font=Fonts/Roboto-Black]NO INTRUSION DETECTED[/font]"
         security_warning_text2 = self.ids['security_text2'].text = "[font=Fonts/Roboto-MediumItalic] [/font]"
         return security_warning_text, security_warning_text2

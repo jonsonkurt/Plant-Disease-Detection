@@ -94,15 +94,26 @@
 		FloatLayout:
 			pos_hint: {'center_y': 0.45, 'center_x': 0.5}
 			size_hint: 0.80, 0.38
-			canvas:
-				Color:
-					rgba:
-						(rgba('#2e593b') if root.plant_status_color == 1 \
-						else rgba('#BC5448') if root.plant_status_color == 2 else (0,0,0,0))
-				RoundedRectangle:
-					radius: [30,30,30,30]
-					size: self.size
-					pos: self.pos
+			# canvas:
+			# 	Color:
+			# 		rgba:
+			# 			(rgba('#2e593b') if root.plant_status_color == 1 \
+			# 			else rgba('#BC5448') if root.plant_status_color == 2 else (0,0,0,0))
+			# 	RoundedRectangle:
+			# 		radius: [30,30,30,30]
+			# 		size: self.size
+			# 		pos: self.pos
+			MDCard:
+				size_hint: 0.80, .9
+				#size: "280dp", "180dp"
+				pos_hint: {'center_y': 0.45, 'center_x': 0.5}
+				canvas:
+					Color:
+						rgba: root.color_disease
+					RoundedRectangle:
+						radius: [30,30,30,30]
+						size: self.size
+						pos: self.pos
 			MDLabel:
 				id: plant_text
 				text: ('[font=Fonts/Roboto-Black]NO DISEASE DETECTED[/font]')
@@ -157,25 +168,29 @@
 			id: security_color
 			pos_hint: {'center_y': 0.45, 'center_x': 0.5}
 			size_hint: 0.80, 0.38
-			canvas:
-				Color:
-					rgba:
-						(rgba('#2e593b') if root.security_status_color == 1 \
-						else rgba('#BC5448') if root.security_status_color == 2 else (0,0,0,0))
-				RoundedRectangle:
-					radius: [30,30,30,30]
-					size: self.size
-					pos: self.pos
-			MDLabel:
-				id: security_text
-				text: ('[font=Fonts/Roboto-Black]NO INTRUSION DETECTED[/font]')
-				font_size: '20dp'
-				bold: True
-				markup: True
-				halign: "center"
-				theme_text_color: 'Custom'
-				text_color: rgba('#FFFFFF')
-				pos_hint: {'center_x': 0.5, 'center_y' : 0.5}
+
+			MDCard:
+				size_hint: 0.80, .9
+				#size: "280dp", "180dp"
+				pos_hint: {"center_x": .5, "center_y": .5}
+				canvas:
+					Color:
+						rgba: root.color
+					RoundedRectangle:
+						radius: [30,30,30,30]
+						size: self.size
+						pos: self.pos
+
+				MDLabel:
+					id: security_text
+					text: ('[font=Fonts/Roboto-Black]NO INTRUSION DETECTED[/font]')
+					font_size: '20dp'
+					bold: True
+					markup: True
+					halign: "center"
+					theme_text_color: 'Custom'
+					text_color: rgba('#FFFFFF')
+					pos_hint: {'center_x': 0.5, 'center_y' : 0.5}
 
 		MDLabel:
 			id: security_text2
@@ -186,3 +201,4 @@
 			theme_text_color: 'Custom'
 			text_color: rgba('#2e593b')
 			pos_hint: {'center_x': 0.5, 'center_y' : 0.16}
+
