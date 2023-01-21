@@ -44,7 +44,7 @@ class HomeScreen(Screen):
         Clock.schedule_interval(self.update_color1, .5)
 
     def update_color(self, dt):
-        if self.is_activated == True and self.is_disease == True:
+        if self.is_activated == True:
             change_color = ['#BC5448', '#2e593b']
             self.color = get_color_from_hex(change_color[self.i])
             self.i = (self.i + 1) % len(change_color)  # loop through all the colors
@@ -61,7 +61,7 @@ class HomeScreen(Screen):
             self.color_disease = get_color_from_hex('#2e593b')
 
     def on_pre_enter(self):
-        #self.start_hardware()
+        self.start_hardware()
         self.start_cam()
 
     def on_enter(self):
@@ -77,26 +77,41 @@ class HomeScreen(Screen):
         self.board = Arduino('COM3')
         self.it = util.Iterator(self.board)
         self.it.start()
-        self.laser_sensor = self.board.get_pin('a:0:i')
-        self.buzzer = self.board.get_pin('d:8:o')
-        self.pirPin = self.board.get_pin('a:1:i')
+        # self.laser_sensor = self.board.get_pin('a:0:i')
+        # self.buzzer = self.board.get_pin('d:8:o')
+        # self.pirPin = self.board.get_pin('a:1:i')
         
-        self.HIGH = True
-        self.LOW = False
-        self.calibrationTime = 30
-        self.pause = 5000
-        self.lockLow = True
-        self.takeLowTime = False
-        self.PIRValue = 0
-        self.number = "09272343635"
-        self._timeout = 0
-        self._buffer = ""
-        self.ldr_val = 0
-        #Add the pins of tripwire, motion sensor, and GSM here
+        # self.HIGH = True
+        # self.LOW = False
+        # self.calibrationTime = 30
+        # self.pause = 5000
+        # self.lockLow = True
+        # self.takeLowTime = False
+        # self.PIRValue = 0
+        # self.number = "09272343635"
+        # self._timeout = 0
+        # self._buffer = ""
+        # self.ldr_val = 0
+        # #Add the pins of tripwire, motion sensor, and GSM here
         
-        self.tripwire_activator()
-        #Add motion sensor using this self.msensor_activator()
-        #Add GSM using this self.gsm_activator()
+        # self.tripwire_activator()
+        # Add GSM using this self.gsm_activator()
+        
+        self.pushbutton = self.board.get_pin('d:8:i')
+        self.button_activator()
+
+    def button(self):
+        while True:
+            self.HIGH = True
+            self.prev_button_state = self.pushbutton.read() 
+            if self.prev_button_state == self.HIGH:
+                self.security_warning()
+                time.sleep(2) # Adjust this for longer intrusion alert display
+                self.security_warning2()
+                
+    def button_activator(self):
+        t = threading.Thread(target=self.button)
+        t.start()
 
     def gsm(self):
         self.tx.write("AT+CMGF=1")
