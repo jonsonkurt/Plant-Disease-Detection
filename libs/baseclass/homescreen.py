@@ -116,11 +116,19 @@ class HomeScreen(Screen):
         t.start()
 
     def gsm(self):
+        conn = sqlite3.connect("mybase.db")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS contacts(id_num integer PRIMARY KEY, phone_number VARCHAR(30))")
+
+        # Get the contact number from the database
+        cur.execute("SELECT phone_number FROM contacts ORDER BY id_num DESC LIMIT 1")
+        contact_num = cur.fetchone()[0]
+        
         self.tx.write("AT+CMGF=1")
         time.sleep(1)
-        self.tx.write('AT+CMGS=\"' + "09272343635" + '\"\r"')
+        self.tx.write('AT+CMGS=\"' + str(contact_num) + '\"\r"')
         time.sleep(1)
-        self.tx.write("Motion Detected. There is a potential intruder or disturbance on your farm.")
+        self.tx.write("ALERT: There is a potential intruder or disturbance on your farm.")
         time.sleep(1)
         self.tx.write(ascii.ctrl('z'))
         time.sleep(1)

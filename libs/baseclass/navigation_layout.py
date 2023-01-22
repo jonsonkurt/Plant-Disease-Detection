@@ -60,7 +60,7 @@ class AddContact(BoxLayout):
         final_contact = str(contact_add)
         conn = sqlite3.connect("mybase.db")
         cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS contacts(phone_number VARCHAR(30))")
+        cur.execute("CREATE TABLE IF NOT EXISTS contacts(id_num integer PRIMARY KEY, phone_number VARCHAR(30))")
         cur.execute("INSERT INTO contacts(phone_number) VALUES(?)", (final_contact,))
         cur.execute("SELECT * FROM contacts")
         conn.commit()
