@@ -13,4 +13,5 @@ Plant Monitoring Application Dashboard
 Set Capturing Time Feature of the Application
 
 ![schematic diagram](https://user-images.githubusercontent.com/55541726/219035563-b0faa141-ccb8-4a57-8edc-a100fd37fa78.png)
+
 Schematic Diagram of the System
